@@ -21,7 +21,7 @@ app.get("/", (req, res) => {
   res.send("Backend server is running!");
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3306;
 
 // Global error handler (LAST middleware)
 const errorHandler = require("./middlewares/error.middleware");
