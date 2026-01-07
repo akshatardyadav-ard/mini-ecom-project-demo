@@ -34,5 +34,5 @@ app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
-  console.log(`Swagger Docs: http://localhost:${PORT}/api-docs`);
+  console.log(`Swagger Docs working: http://localhost:${PORT}/api-docs`);
 });
