@@ -12,7 +12,7 @@ const options = {
     },
     servers: [
       {
-        url: process.env.MYSQL_URL || "http://localhost:3000/api",
+        url: process.env.BASE_URL || "http://localhost:3000/api",
         description: "API Server",
       },
     ],
