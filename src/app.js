@@ -5,17 +5,14 @@ const cors = require("cors");
 app.use(
   cors({
     origin: [
-      "https://mini-ecom-project-demo.onrender.com",
-      "http://localhost:3000",
+      "https://mini-ecom-project-demo.onrender.com", // Swagger / frontend
+      "http://localhost:3000", // local dev
     ],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
-
-// 👇 IMPORTANT: handle preflight explicitly
-app.options("*", cors());
-
 app.use(express.json());
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./swagger");
@@ -38,10 +35,6 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get("/", (req, res) => {
   res.send("Backend server is running!");
-});
-
-app.get("/api/health", (req, res) => {
-  res.json({ status: "ok" });
 });
 
 const PORT = process.env.DB_PORT || 3000;
