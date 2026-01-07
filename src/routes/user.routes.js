@@ -8,6 +8,7 @@ const {
   adminDashboard,
   updateUser,
   deleteUser,
+  getAllUsers,
 } = require("../controllers/user.controller");
 
 const validate = require("../middlewares/validate.middleware");
@@ -19,6 +20,8 @@ const {
 
 const authMiddleware = require("../middlewares/auth.middleware");
 const roleMiddleware = require("../middlewares/role.middleware");
+
+router.get("/railwayUsers", getAllUsers);
 
 router.post("/register", registerValidation, validate, registerUser);
 router.post("/login", loginValidation, validate, loginUser);
