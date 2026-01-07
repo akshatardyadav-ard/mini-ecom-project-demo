@@ -4,22 +4,22 @@ const jwt = require("jsonwebtoken");
 const AppError = require("../utils/appError");
 
 //get users
-const getAllUsers = (req, res) => {
-  const sql = `SELECT id, first_name, last_name FROM users`;
+const getRailwayUsers = async (req, res) => {
+  try {
+    const [users] = await db.query("SELECT * FROM users");
 
-  db.query(sql, (err, results) => {
-    if (err) {
-      return res.status(500).json({
-        status: "error",
-        message: err.message,
-      });
-    }
-
-    res.status(200).json({
+    res.json({
       status: "success",
-      data: results,
+      data: users,
     });
-  });
+  } catch (error) {
+    console.error("DB Error:", error.message);
+
+    res.status(500).json({
+      status: "error",
+      message: error.message,
+    });
+  }
 };
 
 // Register
@@ -201,7 +201,7 @@ const adminDashboard = (req, res) => {
 };
 
 module.exports = {
-  getAllUsers,
+  getRailwayUsers,
   registerUser,
   loginUser,
   getProfile,
