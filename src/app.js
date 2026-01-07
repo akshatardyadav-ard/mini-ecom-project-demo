@@ -1,7 +1,18 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
-
+const cors = require("cors");
+app.use(
+  cors({
+    origin: [
+      "https://mini-ecom-project-demo.onrender.com", // Swagger / frontend
+      "http://localhost:3000", // local dev
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./swagger");
