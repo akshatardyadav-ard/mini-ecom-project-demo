@@ -20,6 +20,8 @@
 
 const mysql = require("mysql2/promise");
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT),
@@ -27,9 +29,7 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
 
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  ssl: isProduction ? { rejectUnauthorized: false } : false,
 
   waitForConnections: true,
   connectionLimit: 10,

@@ -3,6 +3,8 @@ const express = require("express");
 const app = express();
 
 app.use(express.json());
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./swagger");
 
 //Import user routes
 const userRoutes = require("./routes/user.routes");
@@ -17,6 +19,9 @@ app.use("/api", productRoutes);
 app.use("/api", cartRoutes);
 app.use("/api", orderRoutes);
 
+// Swagger Docs
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 app.get("/", (req, res) => {
   res.send("Backend server is running!");
 });
@@ -29,4 +34,5 @@ app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
+  console.log(`Swagger Docs: http://localhost:${PORT}/api-docs`);
 });

@@ -23,34 +23,52 @@ const getRailwayUsers = async (req, res) => {
 };
 
 // Register
-const registerUser = (req, res) => {
-  const { name, email, password, role } = req.body;
+const registerUser = async (req, res, next) => {
+  try {
+    const { name, email, password, role } = req.body;
 
-  const hashedPassword = bcrypt.hashSync(password, 10);
-  const userRole = role || "user";
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "All fields required" });
+    }
 
-  const sql =
-    "INSERT INTO users (name, email, password,role) VALUES (?, ?, ?,?)";
-  db.query(sql, [name, email, hashedPassword, userRole], (err, result) => {
-    if (err) return res.status(500).json({ error: err });
+    const hashedPassword = bcrypt.hashSync(password, 10);
+    const userRole = role || "user";
 
-    res.json({ message: "User registered successfully" });
-  });
+    const sql =
+      "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)";
+
+    const [result] = await db.query(sql, [
+      name,
+      email,
+      hashedPassword,
+      userRole,
+    ]);
+
+    res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      userId: result.insertId,
+    });
+  } catch (err) {
+    console.error("Register Error:", err);
+    next(err);
+  }
 };
 
 // Login
-const loginUser = (req, res, next) => {
-  const { email, password } = req.body;
+const loginUser = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
 
-  const sql = "SELECT * FROM users WHERE email = ?";
-  db.query(sql, [email], (err, users) => {
-    if (err) {
-      //  return res.status(500).json({ error: err }
-      return next(err); //using here globa error middleware
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email & password required" });
     }
 
+    const [users] = await db.query("SELECT * FROM users WHERE email = ?", [
+      email,
+    ]);
+
     if (users.length === 0) {
-      // return res.status(401).json({ message: "User not found" });
       return next(new AppError("User not found", 404));
     }
 
@@ -58,7 +76,6 @@ const loginUser = (req, res, next) => {
 
     const isMatch = bcrypt.compareSync(password, user.password);
     if (!isMatch) {
-      // return res.status(401).json({ message: "Invalid password" });
       return next(new AppError("Invalid password", 401));
     }
 
@@ -72,7 +89,10 @@ const loginUser = (req, res, next) => {
       message: "Login successful",
       token,
     });
-  });
+  } catch (err) {
+    console.error("Login Error:", err);
+    next(err);
+  }
 };
 
 //Get Profile
