@@ -7,12 +7,13 @@ const options = {
     info: {
       title: "E-Commerce Backend API",
       version: "1.0.0",
-      description: "Swagger documentation with JWT auth",
+      description:
+        "Swagger documentation for Node.js E-Commerce Backend with JWT authentication",
     },
     servers: [
       {
-        url: process.env.BASE_URL,
-        description: "Production API Server",
+        url: "https://mini-ecom-project-demo.onrender.com/api",
+        description: "API Server",
       },
     ],
     components: {
@@ -24,8 +25,9 @@ const options = {
         },
       },
     },
-    security: [{ bearerAuth: [] }],
   },
+
+  // 🔥 ABSOLUTE PATH (NO MORE ISSUES)
   apis: [path.join(__dirname, "/routes/**/*.js")],
 };
 
