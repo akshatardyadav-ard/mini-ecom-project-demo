@@ -18,22 +18,37 @@
 
 // module.exports = db;
 
-const mysql = require("mysql2/promise");
+// const mysql = require("mysql2/promise");
 
-const isProduction = process.env.NODE_ENV === "production";
+// const isProduction = process.env.NODE_ENV === "production";
+
+// const pool = mysql.createPool({
+//   host: process.env.DB_HOST,
+//   port: Number(process.env.PORT),
+//   user: process.env.DB_USER,
+//   password: process.env.DB_PASSWORD,
+//   database: process.env.DB_NAME,
+
+//   ssl: isProduction ? { rejectUnauthorized: false } : false,
+
+//   waitForConnections: true,
+//   connectionLimit: 10,
+//   connectTimeout: 30000,
+// });
+
+// module.exports = pool;
+
+require("dotenv").config();
+const mysql = require("mysql2/promise");
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
-  port: Number(process.env.PORT),
+  port: 3306,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-
-  ssl: isProduction ? { rejectUnauthorized: false } : false,
-
   waitForConnections: true,
   connectionLimit: 10,
-  connectTimeout: 30000,
 });
 
 module.exports = pool;

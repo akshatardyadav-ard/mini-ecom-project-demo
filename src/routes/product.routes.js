@@ -11,7 +11,7 @@ const {
   getProductsById,
   updateProduct,
   deleteProduct,
-  createProductImg,
+  createProductWithImages,
 } = require("../controllers/product.controller");
 
 /**
@@ -174,11 +174,11 @@ router.delete("/products/:id", auth, deleteProduct);
  *         description: Admin access required
  */
 router.post(
-  "/productsImg",
+  "/products-img",
   auth,
   role("admin"),
   upload.array("images", 5),
-  createProductImg
+  createProductWithImages
 );
 
 module.exports = router;

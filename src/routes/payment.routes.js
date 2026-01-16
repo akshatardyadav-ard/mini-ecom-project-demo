@@ -40,7 +40,8 @@ const {
  *       401:
  *         description: Unauthorized
  */
-router.post("/payment/create", auth, createPayment);
+router.post("/payment/create", createPayment);
+// router.post("/payment/create", auth, createPayment);
 
 /**
  * @swagger
@@ -71,6 +72,7 @@ router.post("/payment/create", auth, createPayment);
  *       401:
  *         description: Unauthorized
  */
-router.post("/payment/verify", auth, verifyPayment);
+// router.post("/payment/verify", auth, verifyPayment);
+router.post("/payment/verify", verifyPayment);
 
 module.exports = router;

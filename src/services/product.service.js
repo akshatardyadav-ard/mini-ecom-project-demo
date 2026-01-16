@@ -14,16 +14,57 @@ exports.createProduct = async (data) => {
   return result;
 };
 
-// ✅ Get all active products
-exports.getProducts = async () => {
-  const [products] = await db.query(
-    `SELECT p.*, c.name AS category
-     FROM products p
-     JOIN categories c ON c.id = p.category_id
-     WHERE p.status = 1`
-  );
+// ✅ Get all active products without img
+// exports.getProducts = async () => {
+//   const [products] = await db.query(
+//     `SELECT p.*, c.name AS category
+//      FROM products p
+//      JOIN categories c ON c.id = p.category_id
+//      WHERE p.status = 1`
+//   );
 
-  return products;
+//   return products;
+// };
+
+// ✅ Get all active products with imgs
+exports.getProducts = async () => {
+  const [rows] = await db.query(`
+    SELECT 
+      p.id,
+      p.name,
+      p.description,
+      p.price,
+      p.stock,
+      c.name AS category,
+      pi.image_url
+    FROM products p
+    JOIN categories c ON c.id = p.category_id
+    LEFT JOIN product_images pi ON pi.product_id = p.id
+    WHERE p.status = 1
+  `);
+
+  // 🔄 Group images by product
+  const productsMap = {};
+
+  rows.forEach((row) => {
+    if (!productsMap[row.id]) {
+      productsMap[row.id] = {
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        price: row.price,
+        stock: row.stock,
+        category: row.category,
+        images: [],
+      };
+    }
+
+    if (row.image_url) {
+      productsMap[row.id].images.push(row.image_url);
+    }
+  });
+
+  return Object.values(productsMap);
 };
 
 // ✅ Get single product
@@ -63,7 +104,7 @@ exports.deleteProduct = async (id) => {
   return result;
 };
 
-// ✅ Create product (used when images are included)
+// ✅ Create product
 exports.createProductImg = async (data) => {
   const { category_id, name, description, price, stock } = data;
 
@@ -77,19 +118,27 @@ exports.createProductImg = async (data) => {
   return result.insertId;
 };
 
-// ✅ Save product images
-exports.saveProductImages = async (productId, files) => {
-  const values = files.map((file) => [
-    productId,
-    file.path, // Cloudinary URL
-  ]);
+// ✅ SAVE PRODUCT IMAGES (EXPORT PROPERLY) CLOUDINARY
+// exports.saveProductImages = async (productId, files) => {
+//   const values = files.map((file) => [
+//     productId,
+//     file.path, // Cloudinary URL
+//   ]);
 
-  if (!values.length) return true;
+//   if (!values.length) return;
+
+//   await db.query(
+//     "INSERT INTO product_images (product_id, image_url) VALUES ?",
+//     [values]
+//   );
+// };
+
+// ✅ SAVE PRODUCT IMAGES IN LOCAL SERVER
+exports.saveProductImages = async (productId, imagePaths) => {
+  const values = imagePaths.map((path) => [productId, path]);
 
   await db.query(
     "INSERT INTO product_images (product_id, image_url) VALUES ?",
     [values]
   );
-
-  return true;
 };

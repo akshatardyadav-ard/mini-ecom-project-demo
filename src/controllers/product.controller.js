@@ -15,7 +15,7 @@ exports.createProduct = async (req, res, next) => {
 exports.getProducts = async (req, res, next) => {
   try {
     const products = await productService.getProducts();
-    res.status(201).json({
+    res.status(200).json({
       status: "success",
       data: products,
     });
@@ -94,19 +94,64 @@ exports.deleteProduct = async (req, res, next) => {
   }
 };
 
-//when creating product add the imgs
+//THIS CODE FOR CREATE IMG WITH CLOUDINARY
 
-exports.createProductImg = async (req, res, next) => {
+// exports.createProductWithImages = async (req, res, next) => {
+//   try {
+//     const { category_id, name, description, price, stock } = req.body;
+
+//     if (!category_id || !name || !price || !stock) {
+//       return res.status(400).json({
+//         status: "error",
+//         message: "Required fields missing",
+//       });
+//     }
+
+//     const productId = await productService.createProductImg({
+//       category_id,
+//       name,
+//       description,
+//       price,
+//       stock,
+//     });
+
+//     if (req.files?.length) {
+//       await productService.saveProductImages(productId, req.files);
+//     }
+
+//     res.status(201).json({
+//       status: "success",
+//       message: "Product created with images",
+//     });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+
+// This is code for create img with local path
+exports.createProductWithImages = async (req, res, next) => {
   try {
-    const productId = await productService.createProductImg(req.body);
+    const { category_id, name, description, price, stock } = req.body;
 
-    if (req.files && req.files.length > 0) {
-      await productService.saveProductImages(productId, req.files);
+    const productId = await productService.createProductImg({
+      category_id,
+      name,
+      description,
+      price,
+      stock,
+    });
+
+    if (req.files?.length) {
+      const imagePaths = req.files.map(
+        (file) => `/uploads/products/${file.filename}`
+      );
+
+      await productService.saveProductImages(productId, imagePaths);
     }
 
     res.status(201).json({
       status: "success",
-      message: "Product created with images",
+      message: "Product created with local images",
     });
   } catch (err) {
     next(err);
