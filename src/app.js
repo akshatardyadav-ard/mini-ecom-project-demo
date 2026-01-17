@@ -8,26 +8,26 @@ const path = require("path");
 const app = express();
 
 /* CORS FOR RENDER  */
-// app.use(
-//   cors({
-//     origin: [
-//       "https://mini-ecom-project-demo.onrender.com",
-//       "http://localhost:3000",
-//     ],
-//     methods: ["GET", "POST", "PUT", "DELETE"],
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//   })
-// );
-
-// ✅ Enable CORS
 app.use(
   cors({
-    origin: "http://localhost:4200",
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    origin: [
+      "https://mini-ecom-project-demo.onrender.com",
+      "http://localhost:3000",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  })
+  }),
 );
+
+// ✅ Enable CORS FOR LOCAL
+// app.use(
+//   cors({
+//     origin: "http://localhost:4200",
+//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//     credentials: true,
+//   })
+// );
 
 app.use(express.json());
 
