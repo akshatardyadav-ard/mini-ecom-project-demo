@@ -272,16 +272,16 @@ const deleteUser = async (req, res) => {
     ------------------------------------------------ */
 
     // Example dependencies (COMMON)
-    await connection.query("DELETE FROM user_roles WHERE user_id = ?", [
-      userId,
-    ]);
-    await connection.query("DELETE FROM carts WHERE user_id = ?", [userId]);
-    await connection.query("DELETE FROM cart_items WHERE user_id = ?", [
-      userId,
-    ]);
+    // await connection.query("DELETE FROM user_roles WHERE user_id = ?", [
+    //   userId,
+    // ]);
+    await connection.query("DELETE FROM cart WHERE user_id = ?", [userId]);
+    // await connection.query("DELETE FROM cart_items WHERE user_id = ?", [
+    //   userId,
+    // ]);
     await connection.query("DELETE FROM orders WHERE user_id = ?", [userId]);
-    await connection.query("DELETE FROM payments WHERE user_id = ?", [userId]);
-    await connection.query("DELETE FROM addresses WHERE user_id = ?", [userId]);
+    // await connection.query("DELETE FROM payments WHERE user_id = ?", [userId]);
+    // await connection.query("DELETE FROM addresses WHERE user_id = ?", [userId]);
 
     /* ------------------------------------------------
        6️⃣ Delete user
