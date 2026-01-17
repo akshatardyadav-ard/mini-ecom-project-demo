@@ -147,7 +147,7 @@ router.delete("/products/:id", auth, deleteProduct);
 
 /**
  * @swagger
- * /productsImg:
+ * /products-img:
  *   post:
  *     summary: Upload product images (Admin only)
  *     tags: [Products]
@@ -178,7 +178,7 @@ router.post(
   auth,
   role("admin"),
   upload.array("images", 5),
-  createProductWithImages
+  createProductWithImages,
 );
 
 module.exports = router;
