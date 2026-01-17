@@ -186,21 +186,74 @@ const updateUser = async (req, res) => {
 };
 
 //Delete User
+// const deleteUser = async (req, res) => {
+//   try {
+//     const userId = req.params.id;
+
+//     // 🛑 Only admin can delete users
+//     if (req.user.role !== "admin") {
+//       return res.status(403).json({
+//         message: "Access denied. Admin only",
+//       });
+//     }
+
+//     // 🔍 Check if user exists
+//     const [users] = await db.query("SELECT id FROM users WHERE id = ?", [
+//       userId,
+//     ]);
+
+//     if (users.length === 0) {
+//       return res.status(404).json({
+//         message: "User not found",
+//       });
+//     }
+
+//     // 🗑 Delete user
+//     await db.query("DELETE FROM users WHERE id = ?", [userId]);
+
+//     res.json({
+//       message: "User deleted successfully",
+//     });
+//   } catch (err) {
+//     console.error("❌ Delete user error:", err);
+//     res.status(500).json({
+//       message: "Server error",
+//     });
+//   }
+// };
+
+// ✅ Hard Delete User (Direct Delete)
 const deleteUser = async (req, res) => {
+  const connection = await db.getConnection();
+
   try {
     const userId = req.params.id;
 
-    // 🛑 Only admin can delete users
+    /* ------------------------------------------------
+       1️⃣ Only admin can delete users
+    ------------------------------------------------ */
     if (req.user.role !== "admin") {
       return res.status(403).json({
         message: "Access denied. Admin only",
       });
     }
 
-    // 🔍 Check if user exists
-    const [users] = await db.query("SELECT id FROM users WHERE id = ?", [
-      userId,
-    ]);
+    /* ------------------------------------------------
+       2️⃣ Prevent admin deleting self
+    ------------------------------------------------ */
+    if (req.user.id == userId) {
+      return res.status(400).json({
+        message: "Admin cannot delete own account",
+      });
+    }
+
+    /* ------------------------------------------------
+       3️⃣ Check user exists
+    ------------------------------------------------ */
+    const [users] = await connection.query(
+      "SELECT id FROM users WHERE id = ?",
+      [userId],
+    );
 
     if (users.length === 0) {
       return res.status(404).json({
@@ -208,18 +261,55 @@ const deleteUser = async (req, res) => {
       });
     }
 
-    // 🗑 Delete user
-    await db.query("DELETE FROM users WHERE id = ?", [userId]);
+    /* ------------------------------------------------
+       4️⃣ START TRANSACTION
+    ------------------------------------------------ */
+    await connection.beginTransaction();
 
-    res.json({
-      message: "User deleted successfully",
+    /* ------------------------------------------------
+       5️⃣ Delete dependent records FIRST
+       (adjust table names to your schema)
+    ------------------------------------------------ */
+
+    // Example dependencies (COMMON)
+    await connection.query("DELETE FROM user_roles WHERE user_id = ?", [
+      userId,
+    ]);
+    await connection.query("DELETE FROM carts WHERE user_id = ?", [userId]);
+    await connection.query("DELETE FROM cart_items WHERE user_id = ?", [
+      userId,
+    ]);
+    await connection.query("DELETE FROM orders WHERE user_id = ?", [userId]);
+    await connection.query("DELETE FROM payments WHERE user_id = ?", [userId]);
+    await connection.query("DELETE FROM addresses WHERE user_id = ?", [userId]);
+
+    /* ------------------------------------------------
+       6️⃣ Delete user
+    ------------------------------------------------ */
+    await connection.query("DELETE FROM users WHERE id = ?", [userId]);
+
+    /* ------------------------------------------------
+       7️⃣ COMMIT
+    ------------------------------------------------ */
+    await connection.commit();
+
+    res.status(200).json({
+      message: "User permanently deleted",
     });
   } catch (err) {
-    console.error("❌ Delete user error:", err);
+    await connection.rollback();
+    console.error("❌ Hard delete user error:", err.sqlMessage || err);
+
     res.status(500).json({
-      message: "Server error",
+      message: err.sqlMessage || "Server error",
     });
+  } finally {
+    connection.release();
   }
+};
+
+module.exports = {
+  deleteUser,
 };
 
 //ADMIN ONLY
