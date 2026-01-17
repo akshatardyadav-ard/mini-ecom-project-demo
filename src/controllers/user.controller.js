@@ -222,7 +222,7 @@ const updateUser = async (req, res) => {
 //   }
 // };
 
-// ✅ Hard Delete User (Direct Delete)
+// ✅ Hard Delete User (Correct FK Order)
 const deleteUser = async (req, res) => {
   const connection = await db.getConnection();
 
@@ -230,7 +230,7 @@ const deleteUser = async (req, res) => {
     const userId = req.params.id;
 
     /* ------------------------------------------------
-       1️⃣ Only admin can delete users
+       1️⃣ Only admin
     ------------------------------------------------ */
     if (req.user.role !== "admin") {
       return res.status(403).json({
@@ -239,7 +239,7 @@ const deleteUser = async (req, res) => {
     }
 
     /* ------------------------------------------------
-       2️⃣ Prevent admin deleting self
+       2️⃣ Prevent self delete
     ------------------------------------------------ */
     if (req.user.id == userId) {
       return res.status(400).json({
@@ -267,24 +267,26 @@ const deleteUser = async (req, res) => {
     await connection.beginTransaction();
 
     /* ------------------------------------------------
-       5️⃣ Delete dependent records FIRST
-       (adjust table names to your schema)
+       5️⃣ DELETE CHILD TABLES FIRST
     ------------------------------------------------ */
 
-    // Example dependencies (COMMON)
-    // await connection.query("DELETE FROM user_roles WHERE user_id = ?", [
-    //   userId,
-    // ]);
-    await connection.query("DELETE FROM cart WHERE user_id = ?", [userId]);
-    // await connection.query("DELETE FROM cart_items WHERE user_id = ?", [
-    //   userId,
-    // ]);
+    // delete order items → orders → user
+    await connection.query(
+      `DELETE oi 
+       FROM order_items oi
+       JOIN orders o ON oi.order_id = o.id
+       WHERE o.user_id = ?`,
+      [userId],
+    );
+
     await connection.query("DELETE FROM orders WHERE user_id = ?", [userId]);
+
+    // (add more if exist)
     // await connection.query("DELETE FROM payments WHERE user_id = ?", [userId]);
-    // await connection.query("DELETE FROM addresses WHERE user_id = ?", [userId]);
+    // await connection.query("DELETE FROM cart_items WHERE user_id = ?", [userId]);
 
     /* ------------------------------------------------
-       6️⃣ Delete user
+       6️⃣ DELETE USER
     ------------------------------------------------ */
     await connection.query("DELETE FROM users WHERE id = ?", [userId]);
 
@@ -298,7 +300,7 @@ const deleteUser = async (req, res) => {
     });
   } catch (err) {
     await connection.rollback();
-    console.error("❌ Hard delete user error:", err.sqlMessage || err);
+    console.error("❌ Hard delete error:", err.sqlMessage || err);
 
     res.status(500).json({
       message: err.sqlMessage || "Server error",
@@ -306,10 +308,6 @@ const deleteUser = async (req, res) => {
   } finally {
     connection.release();
   }
-};
-
-module.exports = {
-  deleteUser,
 };
 
 //ADMIN ONLY
