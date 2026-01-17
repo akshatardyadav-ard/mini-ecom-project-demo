@@ -82,7 +82,7 @@ const loginUser = async (req, res, next) => {
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "1h" },
     );
 
     res.json({
@@ -104,94 +104,103 @@ const getProfile = (req, res) => {
 };
 
 //Update User
-const updateUser = (req, res) => {
-  const userId = req.params.id;
-  const { name, email, password, role } = req.body;
+const updateUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { name, email, password, role } = req.body;
 
-  // 1️⃣ Check if user exists
-  db.query(
-    "SELECT id, role FROM users WHERE id = ?",
-    [userId],
-    (err, users) => {
-      if (err) {
-        return res.status(500).json({ error: err });
-      }
-
-      if (users.length === 0) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      // 2️⃣ Only admin can update role
-      if (role && req.user.role !== "admin") {
-        return res.status(403).json({
-          message: "Only admin can update user role",
-        });
-      }
-
-      // 3️⃣ Build update fields dynamically
-      const fields = [];
-      const values = [];
-
-      if (name) {
-        fields.push("name = ?");
-        values.push(name);
-      }
-
-      if (email) {
-        fields.push("email = ?");
-        values.push(email);
-      }
-
-      if (password) {
-        const hashedPassword = bcrypt.hashSync(password, 10);
-        fields.push("password = ?");
-        values.push(hashedPassword);
-      }
-
-      if (role) {
-        fields.push("role = ?");
-        values.push(role);
-      }
-
-      if (fields.length === 0) {
-        return res.status(400).json({
-          message: "No valid fields provided for update",
-        });
-      }
-
-      // 4️⃣ Final query
-      const sql = `UPDATE users SET ${fields.join(",")} WHERE id = ?`;
-      values.push(userId);
-
-      db.query(sql, values, (err) => {
-        if (err) {
-          return res.status(500).json({ error: err });
-        }
-        res.json({
-          message: "User updated successfully",
-          updatedFields: fields.map((f) => f.split(" ")[0]),
-        });
+    // Self or admin
+    if (req.user.role !== "admin" && req.user.id != userId) {
+      return res.status(403).json({
+        message: "You are not allowed to update this user",
       });
     }
-  );
+
+    // 🔹 Check user exists
+    const [users] = await db.query("SELECT id FROM users WHERE id = ?", [
+      userId,
+    ]);
+
+    console.log("5️⃣ DB select executed");
+
+    if (users.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 🔹 Only admin can update role
+    if (role && req.user.role !== "admin") {
+      return res.status(403).json({
+        message: "Only admin can update user role",
+      });
+    }
+
+    const fields = [];
+    const values = [];
+
+    if (name) {
+      fields.push("name = ?");
+      values.push(name);
+    }
+
+    if (email) {
+      fields.push("email = ?");
+      values.push(email);
+    }
+
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      fields.push("password = ?");
+      values.push(hashedPassword);
+    }
+
+    if (role) {
+      fields.push("role = ?");
+      values.push(role);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({
+        message: "No valid fields provided",
+      });
+    }
+
+    const sql = `UPDATE users SET ${fields.join(", ")} WHERE id = ?`;
+    values.push(userId);
+
+    await db.query(sql, values);
+
+    console.log("6️⃣ Update executed");
+
+    res.json({
+      message: "User updated successfully",
+    });
+  } catch (err) {
+    console.error("❌ ERROR:", err);
+
+    if (err.code === "ER_DUP_ENTRY") {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
 //Delete User
-const deleteUser = (req, res) => {
-  const userId = req.params.id;
+const deleteUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
 
-  // 🛑 Only admin can delete users
-  if (req.user.role !== "admin") {
-    return res.status(403).json({
-      message: "Access denied. Admin only",
-    });
-  }
-
-  // 🔍 Check if user exists
-  db.query("SELECT id FROM users WHERE id = ?", [userId], (err, users) => {
-    if (err) {
-      return res.status(500).json({ error: err });
+    // 🛑 Only admin can delete users
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        message: "Access denied. Admin only",
+      });
     }
+
+    // 🔍 Check if user exists
+    const [users] = await db.query("SELECT id FROM users WHERE id = ?", [
+      userId,
+    ]);
 
     if (users.length === 0) {
       return res.status(404).json({
@@ -200,16 +209,17 @@ const deleteUser = (req, res) => {
     }
 
     // 🗑 Delete user
-    db.query("DELETE FROM users WHERE id = ?", [userId], (err) => {
-      if (err) {
-        return res.status(500).json({ error: err });
-      }
+    await db.query("DELETE FROM users WHERE id = ?", [userId]);
 
-      res.json({
-        message: "User deleted successfully",
-      });
+    res.json({
+      message: "User deleted successfully",
     });
-  });
+  } catch (err) {
+    console.error("❌ Delete user error:", err);
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
 };
 
 //ADMIN ONLY
