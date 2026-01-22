@@ -94,18 +94,10 @@ exports.deleteProduct = async (req, res, next) => {
   }
 };
 
-//THIS CODE FOR CREATE IMG WITH CLOUDINARY
-
+// This is code for create img with local path
 // exports.createProductWithImages = async (req, res, next) => {
 //   try {
 //     const { category_id, name, description, price, stock } = req.body;
-
-//     if (!category_id || !name || !price || !stock) {
-//       return res.status(400).json({
-//         status: "error",
-//         message: "Required fields missing",
-//       });
-//     }
 
 //     const productId = await productService.createProductImg({
 //       category_id,
@@ -116,22 +108,34 @@ exports.deleteProduct = async (req, res, next) => {
 //     });
 
 //     if (req.files?.length) {
-//       await productService.saveProductImages(productId, req.files);
+//       const imagePaths = req.files.map(
+//         (file) => `/uploads/products/${file.filename}`
+//       );
+
+//       await productService.saveProductImages(productId, imagePaths);
 //     }
 
 //     res.status(201).json({
 //       status: "success",
-//       message: "Product created with images",
+//       message: "Product created with local images",
 //     });
 //   } catch (err) {
 //     next(err);
 //   }
 // };
 
-// This is code for create img with local path
+//THIS CODE FOR CREATE IMG WITH CLOUDINARY
+
 exports.createProductWithImages = async (req, res, next) => {
   try {
     const { category_id, name, description, price, stock } = req.body;
+
+    if (!category_id || !name || !price || !stock) {
+      return res.status(400).json({
+        status: "error",
+        message: "Required fields missing",
+      });
+    }
 
     const productId = await productService.createProductImg({
       category_id,
@@ -142,16 +146,12 @@ exports.createProductWithImages = async (req, res, next) => {
     });
 
     if (req.files?.length) {
-      const imagePaths = req.files.map(
-        (file) => `/uploads/products/${file.filename}`
-      );
-
-      await productService.saveProductImages(productId, imagePaths);
+      await productService.saveProductImages(productId, req.files);
     }
 
     res.status(201).json({
       status: "success",
-      message: "Product created with local images",
+      message: "Product created with cloudinary images",
     });
   } catch (err) {
     next(err);
