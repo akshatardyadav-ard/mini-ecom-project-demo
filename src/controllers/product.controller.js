@@ -130,12 +130,12 @@ exports.createProductWithImages = async (req, res, next) => {
   try {
     const { category_id, name, description, price, stock } = req.body;
 
-    if (!category_id || !name || !price || !stock) {
-      return res.status(400).json({
-        status: "error",
-        message: "Required fields missing",
-      });
-    }
+    // if (!category_id || !name || !price || !stock) {
+    //   return res.status(400).json({
+    //     status: "error",
+    //     message: "Required fields missing",
+    //   });
+    // }
 
     const productId = await productService.createProductImg({
       category_id,
